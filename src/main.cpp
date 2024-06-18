@@ -7,4 +7,5 @@ void loop()
 {   
     ps2x.read_gamepad(false, false);
     controller();
+    delay(50);
 }
