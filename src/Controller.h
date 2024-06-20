@@ -35,12 +35,12 @@ void move_forward(int x)
 void turn_left(int x)
 {
     setPower(pin1_dc1,pin2_dc1,x);
-    setPower(pin2_dc4,pin1_dc4,0);
+    setPower(pin1_dc4,pin2_dc4,x);
 }
 void turn_right(int x)
 {
     setPower(pin2_dc4,pin1_dc4,x);
-    setPower(pin2_dc1,pin1_dc1,0);
+    setPower(pin2_dc1,pin1_dc1,x);
 }
 void move_backward(int x)
 {
@@ -68,11 +68,11 @@ void intake_reverse(int x)
 }
 
 //Climber
-void climber_forward(int x)
+void climber_up(int x)
 {
     setPower(pin1_dc2,pin2_dc2,x);
 }
-void climber_reverse(int x) 
+void climber_down(int x) 
 {
     setPower(pin2_dc2,pin1_dc2,x);
 }
@@ -86,7 +86,17 @@ void controller()
 {   
     //Joystick Setting Up
     int ly = ps2x.Analog(PSS_LY);
-    int rx = ps2x.Analog(PSS_RX); 
+    int rx = ps2x.Analog(PSS_RX);
+
+    if(ps2x.Button(PSB_L2))
+    {
+        rx = ps2x.Analog(PSS_LX);
+    }
+    else if(ps2x.Button(PSB_R2))
+    {
+        rx = ps2x.Analog(PSS_RX);
+    }
+    
     int ly_raw = y - ly;
     int rx_raw = x - rx; 
     int ly_val = abs(ly_raw);
@@ -117,27 +127,36 @@ void controller()
     }
 
     //Intake Control
-    if(ps2x.Button(PSB_L1))
+    
+    if (ps2x.NewButtonState(PSB_TRIANGLE))
+    {
+        intake_reverse(4095*0.7);
+    }
+    else if(ps2x.NewButtonState(PSB_CIRCLE))
+    {
+        intake_run(4095*0.7); 
+    }
+    else if(ps2x.Button(PSB_L1))
     {
         intake_stop();
-    }
-    else if (ps2x.Button(PSB_TRIANGLE))
-    {
-        intake_reverse(4095);
-    }
-    else
-    {
-        intake_run(4095); 
     }
 
     //Climber Control
     if(ps2x.Button(PSB_PAD_UP))
     {
-        climber_forward(3000);
+        climber_up(3000);
     }
     else if(ps2x.Button(PSB_PAD_DOWN))
     {
-        climber_reverse(3000);
+        climber_down(3000);
+    }
+    else if(ps2x.Button(PSB_CROSS))
+    {
+        climber_up(4095);
+    }
+    else if(ps2x.Button(PSB_SQUARE))
+    {
+        climber_down(4095);
     }
     else
     {
