@@ -1,15 +1,11 @@
 #include <Configs.h>
 
-#define PS2_DAT 12 // MISO
-#define PS2_CMD 13 // MOSI
-#define PS2_SEL 15 // SS
-#define PS2_CLK 14 // SLK
+int y = 128 ; //If it works well, leave it as it is
+int x = 127 ; // Similar to y, leave it as it is
+int pulse = 4095; // Pulse value for the motors, can be adjusted based on the board you are using (e.g., 4095 for PCA9685, 255 for Arduino PWM)
+double power = 0.7; // Change this value to adjust speed of the motors
 
-PS2X ps2x ;
-
-int y = 128 ;
-int x = 127 ;
-
+//ALWAYS USING THIS FUNCTION IN SETUP FUNCTION
 void setupPS2controller()
 {
     int error = -1 ;
@@ -20,13 +16,37 @@ void setupPS2controller()
     }
 }
 
+//Set power and direction for DC motors, if you want to change the direction, just swap the pins in your main code
+//Don't touch this function, just change the parameters in your main code
 void setPower(int pin1,int pin2,int x)
 {
     pwm.setPWM(pin1,0,x);
     pwm.setPWM(pin2,0,0);
 }
 
+// How to use this function to set the power and dirction of your own DC motors
+// setPower(pin1_dc1,pin2_dc1,x); // For the first DC motor
+// setPower(pin1_dc2,pin2_dc2,x); // For the second DC motor (Optional, if you have to control two DC Motors in your mechanism)
+// You can add "setPower(pin1_dc1,pin2_dc1,x);" in your functions to make the code more readable and organized
+// The example that you can see in the move_forward or other functions below
+
+
+//Servo
+// Functions to set the position of the position servo 
+void setPosition(int pin, int pos)
+{
+    constrain(pos, 500, 2500);
+    pwm.writeMicroseconds(pin,pos);
+}
+// Functions to set the power and direction of the contunious servo
+void setServoPower(int pin, int x){
+    constrain(x, 500, 2500); 
+    pwm.writeMicroseconds(pin, x);
+}
+
 //Base
+// x = pulse * power; 
+// Only change x in your main code, it will set the speed of the motors 
 void move_forward(int x)
 {
     setPower(pin1_dc1,pin2_dc1,x);
@@ -54,6 +74,8 @@ void stop()
 }
 
 //Intake
+// x = pulse * power; 
+// Only change x in your main code, it will set the speed of the motors 
 void intake_run(int x)
 {
     setPower(pin1_dc3,pin2_dc3,x);
@@ -68,6 +90,8 @@ void intake_reverse(int x)
 }
 
 //Climber
+// x = pulse * power; 
+// Only change x in your main code, it will set the speed of the motors 
 void climber_up(int x)
 {
     setPower(pin1_dc2,pin2_dc2,x);
@@ -82,9 +106,12 @@ void climber_stop()
 }
 
 //Control
+// The main code to control the robot
 void controller()
 {   
+
     //Joystick Setting Up
+
     int ly = ps2x.Analog(PSS_LY);
     int rx = ps2x.Analog(PSS_RX);
 
@@ -125,16 +152,19 @@ void controller()
     {
         stop();
     }
-
-    //Intake Control
     
+    // The example of the main code to control intake using the PS2 controller
+    // You can change the buttons to control the intake, climber, and base
+    // You can also change the power of the motors by changing the power variable
+    // You can follow this link https://via.makerviet.org/vi/docs/3_robotics-with-via/4_gamepad-with-via/ to find out the suitable buttons for your player
+    //Intake Control
     if (ps2x.NewButtonState(PSB_TRIANGLE))
     {
-        intake_reverse(4095*0.7);
+        intake_reverse(pulse * power);
     }
     else if(ps2x.NewButtonState(PSB_CIRCLE))
     {
-        intake_run(4095*0.7); 
+        intake_run(pulse * power); 
     }
     else if(ps2x.Button(PSB_L1))
     {
@@ -144,19 +174,19 @@ void controller()
     //Climber Control
     if(ps2x.Button(PSB_PAD_UP))
     {
-        climber_up(3000);
+        climber_up(pulse * power);
     }
     else if(ps2x.Button(PSB_PAD_DOWN))
     {
-        climber_down(3000);
+        climber_down(pulse * power);
     }
     else if(ps2x.Button(PSB_CROSS))
     {
-        climber_up(4095);
+        climber_up(pulse);
     }
     else if(ps2x.Button(PSB_SQUARE))
     {
-        climber_down(4095);
+        climber_down(pulse);
     }
     else
     {
